@@ -6,6 +6,7 @@ grid = []
 for i in range(1, 17, 4):
     grid.append(list(range(i, i+4)))
 pen = turtle.Turtle()
+HYPOTENUSE = (2*100**2)**0.5
 
 """
 Method to draw the 4x4 grid with the turtle module. 
@@ -50,15 +51,60 @@ def drawPlus(coordinate):
     pen.left(90)
 
 """
+Method to draw the X signs.
+It takes a parameter of the coordinates of the X.
+The first number is the row number and the second number is the column number.
+"""
+def drawX(coordinate):
+    pen.color("red")
+    #drawing down and to the right
+    pen.right(45)
+    #see drawPlus for logic behind pen placement
+    pen.goto(-200+100*coordinate[1], 200-100*coordinate[0])
+    pen.down()
+    pen.forward(HYPOTENUSE)
+    pen.up()
+    #drawing up and to the right
+    pen.left(90)
+    #notably this is going to be starting from the bottom left of the square and so has to be 100 lower on the Y axis.
+    pen.goto(-200+100*coordinate[1], 100-100*coordinate[0])
+    pen.down()
+    pen.forward(HYPOTENUSE)
+    pen.up()
+    pen.right(45)
+
+
+"""
 Method that takes a set of safe grid spaces and the coordinate of a plus and removes all the safe squares that are horizontal and vertical of the plus.
 """
 def plusRemove(safe, coordinate):
+    #remove all horizontal squares
     for item in grid[coordinate[0]]:
         if item in safe:
             safe.remove(item)
+    #remove all vertical squares
     for index in range(0, 4):
         if grid[index][coordinate[1]] in safe:
             safe.remove(grid[index][coordinate[1]])
+
+"""
+Method that takes a set of safe grid spaces and the coordinates of an X and removes all the safe squares that are diagonal of the X. 
+"""
+def XRemove(safe, coordinate):
+    #starts with removing the square the X is on itself.
+    if grid[coordinate[0]][coordinate[1]] in safe:
+        safe.remove(grid[coordinate[0]][coordinate[1]])
+    #all the possible diagonal movements from the X.
+    diagonalMovement = [(-1,-1), (-1, 1), (1, -1), (1, 1)]
+    #as soon as all the squares in one direction are cleared of being safe, it will iterate in the next direction starting from the same origin of the X.
+    for movement in diagonalMovement:
+        x, y = coordinate
+        while 0 <= x + movement[0] <= 3 and 0 <= y + movement[1] <= 3:
+            x += movement[0]
+            y += movement[1]
+            if grid[x][y] in safe:
+                safe.remove(grid[x][y])
+        
 
 """
 The first puzzle set that always has one plus each on the top and bottom row with the plus on the bottom row always being two columns over from the plus on the top row.
@@ -84,10 +130,24 @@ def polyominoid_one():
     plusRemove(safe, firstPlus)
     plusRemove(safe, secondPlus)
     return safe
-        
+
+"""
+The fourth puzzle set that always has two X's on the inner four circles with the X's always being diagonal to each other.
+"""     
+def polyominoid_four():
+    firstX = (1, randint(1,2))
+    secondX = (2, abs(3 - firstX[1]))
+    drawX(firstX)
+    drawX(secondX)
+    safe = list(range(1,17))
+    XRemove(safe, firstX)
+    XRemove(safe, secondX)
+    return safe
+
 def main():
     drawGrid()
-    safe = polyominoid_one()
+    polyominoid = [polyominoid_one, polyominoid_four]
+    safe = polyominoid[1]()
     guess = input("Determine the safe spots for this pattern: ").split()
     for index in range(0, len(guess)):
         guess[index] = int(guess[index])
