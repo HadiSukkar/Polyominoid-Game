@@ -155,32 +155,90 @@ def polyominoid_two():
     secondX = (3, 3-firstX[1])
     XShape = [firstX, secondX]
     randomX = XShape[randint(0,1)]
+    untetheredX = XShape[1-XShape.index(randomX)]
     #this assigns the first plus to be in the same row as one of the random Xs but in the other corner in that row.
     firstPlus = (3 - randomX[0], randomX[1])
-    firstTether = [firstX, firstPlus]
+    firstTether = [randomX, firstPlus]
     #The second + is first created as a list so it can be placed in a corner and then moved over to the correct location before being turned into a tuple.
     secondPlus = [3-firstPlus[0], 3-firstPlus[1]]
     for i in range(0, 2):
-        if secondPlus[i] == secondX[i]:
+        if secondPlus[i] == untetheredX[i]:
             if secondPlus[i] == 3:
                 secondPlus[i] = 2
             else:
                 secondPlus[i] = 1
     secondPlus = tuple(secondPlus)
-    secondTether = [secondX, secondPlus]
+    secondTether = [untetheredX, secondPlus]
     drawX(firstX)
     drawX(secondX)
     drawPlus(firstPlus)
     drawPlus(secondPlus)
     drawTether(firstTether)
     drawTether(secondTether)
-    firstX, firstPlus = firstPlus, firstX
-    secondX, secondPlus = secondPlus, secondX
+    randomX, firstPlus = firstPlus, randomX
+    untetheredX, secondPlus = secondPlus, untetheredX
     safe = list(range(1,17))
     plusRemove(safe, firstPlus)
     plusRemove(safe, secondPlus)
-    XRemove(safe, firstX)
-    XRemove(safe, secondX)
+    XRemove(safe, randomX)
+    XRemove(safe, untetheredX)
+    return safe
+
+def polyominoid_three():
+    firstX = (0, 3*randint(0,1))
+    secondX = (3, 3-firstX[1])
+    XShape = [firstX, secondX]
+    randomX = XShape[randint(0,1)]
+    orientation = randint(0,1)
+    if orientation == 0:
+        #in this orientation both + are around one of the remaining corners and so they are therefore initially placed in the corner as a list and then
+        #corrected to the right location and turned into a tuple.
+        firstPlus = [3- randomX[0], randomX[1]]
+        secondPlus = [firstPlus[0], firstPlus[1]]
+        for i in range(0, 2):
+            if firstPlus[i] == firstX[i]:
+                if firstPlus[i] == 3:
+                    firstPlus[i] = 2
+                else:
+                    firstPlus[i] = 1
+            if secondPlus[i] == secondX[i]:
+                if secondPlus[i] == 3:
+                    secondPlus[i] = 2
+                else:
+                    secondPlus[i] = 1
+        firstPlus = tuple(firstPlus)
+        secondPlus = tuple(secondPlus)
+        #notably the + symbols will shift to a different row or column creating a diagonal tether so to maintain the straight line tether, the + will have to tether to 
+        #opposite X they were compared to in the above statements.
+        firstTether = [firstX, secondPlus]
+        secondTether = [secondX, firstPlus]
+    else:
+        firstPlus = (3 - randomX[0], randomX[1])
+        randomX = XShape[randint(0,1)]
+        firstTether = [randomX, firstPlus]
+        untetheredX = XShape[1-XShape.index(randomX)]
+        secondPlus = [3 - firstPlus[0], 3 - firstPlus[1]]
+        for i in range(0, 2):
+            if secondPlus[i] == untetheredX[i]:
+                if secondPlus[i] == 3:
+                    secondPlus[i] = 1
+                else:
+                    secondPlus[i] = 2
+        secondPlus = tuple(secondPlus)
+        secondTether = [untetheredX, secondPlus]
+    drawX(firstX)
+    drawX(secondX)
+    drawPlus(firstPlus)
+    drawPlus(secondPlus)
+    drawTether(firstTether)
+    drawTether(secondTether)
+    firstTether[0], firstTether[1] = firstTether[1], firstTether[0]
+    secondTether[0], secondTether[1] = secondTether[1], secondTether[0]
+    safe = list(range(1,17))
+    plusRemove(safe, firstTether[1])
+    plusRemove(safe, secondTether[1])
+    XRemove(safe, firstTether[0])
+    XRemove(safe, secondTether[0])
     return safe
 
 
@@ -199,11 +257,14 @@ def polyominoid_four():
 
 def main():
     drawGrid()
-    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_four]
+    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_three, polyominoid_four]
     safe = polyominoid[1]()
     guess = input("Determine the safe spots for this pattern: ").split()
     for index in range(0, len(guess)):
         guess[index] = int(guess[index])
+    if len(safe) != len(guess):
+        print("You guessed wrong!")
+        return
     for item in safe:
         if item not in guess:
             print("You guessed wrong!")
