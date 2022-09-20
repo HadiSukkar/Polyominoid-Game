@@ -35,6 +35,7 @@ The first number is the row number (and therefore corresponds to the Y-axis).
 The second number is the column number (and therefore corresponds to the X-axis).
 """
 def drawPlus(coordinate):
+    pen.width(3)
     pen.color("red")
     #X starts at -200 and increments by 100 because the higher the column number, the more positive the value of X has to be.
     #Y starts at 200 (150 in this case because it has to start in the middle of the square to draw the line) and decrements by 100 because the higher the row number,
@@ -56,6 +57,7 @@ It takes a parameter of the coordinates of the X.
 The first number is the row number and the second number is the column number.
 """
 def drawX(coordinate):
+    pen.width(3)
     pen.color("red")
     #drawing down and to the right
     pen.right(45)
@@ -73,6 +75,18 @@ def drawX(coordinate):
     pen.up()
     pen.right(45)
 
+"""
+Method to draw tethers between two shapes.
+It takes a pair of two coordinates and draws a line between the center of the squares that they correspond to.
+"""
+def drawTether(coordinateSet):
+    pen.width(1)
+    start, destination = coordinateSet
+    pen.color("blue")
+    pen.goto(-150+100*start[1], 150-100*start[0])
+    pen.down()
+    pen.goto(-150+100*destination[1], 150-100*destination[0])
+    pen.up()
 
 """
 Method that takes a set of safe grid spaces and the coordinate of a plus and removes all the safe squares that are horizontal and vertical of the plus.
@@ -132,11 +146,50 @@ def polyominoid_one():
     return safe
 
 """
+The second puzzle set that has two Xs on opposite corners and one + in one of the remaining corners tethered to one of these Xs.
+There is a remaining + across from the remaining untethered X but shifted one across and these two are also tethered.
+"""
+def polyominoid_two():
+    #this expression gets the Y coordinate to either be 0 or 3
+    firstX = (0, 3*randint(0,1))
+    secondX = (3, 3-firstX[1])
+    XShape = [firstX, secondX]
+    randomX = XShape[randint(0,1)]
+    #this assigns the first plus to be in the same row as one of the random Xs but in the other corner in that row.
+    firstPlus = (3 - randomX[0], randomX[1])
+    firstTether = [firstX, firstPlus]
+    #The second + is first created as a list so it can be placed in a corner and then moved over to the correct location before being turned into a tuple.
+    secondPlus = [3-firstPlus[0], 3-firstPlus[1]]
+    for i in range(0, 2):
+        if secondPlus[i] == secondX[i]:
+            if secondPlus[i] == 3:
+                secondPlus[i] = 2
+            else:
+                secondPlus[i] = 1
+    secondPlus = tuple(secondPlus)
+    secondTether = [secondX, secondPlus]
+    drawX(firstX)
+    drawX(secondX)
+    drawPlus(firstPlus)
+    drawPlus(secondPlus)
+    drawTether(firstTether)
+    drawTether(secondTether)
+    firstX, firstPlus = firstPlus, firstX
+    secondX, secondPlus = secondPlus, secondX
+    safe = list(range(1,17))
+    plusRemove(safe, firstPlus)
+    plusRemove(safe, secondPlus)
+    XRemove(safe, firstX)
+    XRemove(safe, secondX)
+    return safe
+
+
+"""
 The fourth puzzle set that always has two X's on the inner four circles with the X's always being diagonal to each other.
 """     
 def polyominoid_four():
     firstX = (1, randint(1,2))
-    secondX = (2, abs(3 - firstX[1]))
+    secondX = (2, 3 - firstX[1])
     drawX(firstX)
     drawX(secondX)
     safe = list(range(1,17))
@@ -146,7 +199,7 @@ def polyominoid_four():
 
 def main():
     drawGrid()
-    polyominoid = [polyominoid_one, polyominoid_four]
+    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_four]
     safe = polyominoid[1]()
     guess = input("Determine the safe spots for this pattern: ").split()
     for index in range(0, len(guess)):
