@@ -35,7 +35,7 @@ The first number is the row number (and therefore corresponds to the Y-axis).
 The second number is the column number (and therefore corresponds to the X-axis).
 """
 def drawPlus(coordinate):
-    pen.width(3)
+    pen.width(5)
     pen.color("red")
     #X starts at -200 and increments by 100 because the higher the column number, the more positive the value of X has to be.
     #Y starts at 200 (150 in this case because it has to start in the middle of the square to draw the line) and decrements by 100 because the higher the row number,
@@ -57,7 +57,7 @@ It takes a parameter of the coordinates of the X.
 The first number is the row number and the second number is the column number.
 """
 def drawX(coordinate):
-    pen.width(3)
+    pen.width(5)
     pen.color("red")
     #drawing down and to the right
     pen.right(45)
@@ -80,12 +80,48 @@ Method to draw tethers between two shapes.
 It takes a pair of two coordinates and draws a line between the center of the squares that they correspond to.
 """
 def drawTether(coordinateSet):
-    pen.width(1)
+    pen.width(3)
     start, destination = coordinateSet
     pen.color("blue")
     pen.goto(-150+100*start[1], 150-100*start[0])
     pen.down()
     pen.goto(-150+100*destination[1], 150-100*destination[0])
+    pen.up()
+
+"""
+Method to both draw and remove the safe squares from the chorus ixou pattern. Chorus ixou is an hourglass or bowtie shape that makes any square completely covered by the
+hourglass or bowtie be rendered unsafe.
+"""
+def chorosIxou(safe):
+    #A cardinality of 0 means that there's an hourglass shape choros ixou. A cardinality of 1 means a bowtie.
+    cardinality = randint(0, 1)
+    removed =[[2, 3, 14, 15], [5, 8, 9, 12]] 
+    for i in removed[cardinality]:
+        safe.remove(i)
+    pen.width(1)
+    pen.color("green")
+    pen.fillcolor("green")
+    pen.goto(0, 0)
+    if cardinality == 0:
+        pen.left(45)
+    else:
+        pen.right(45)
+    pen.down()
+    pen.begin_fill()
+    pen.forward(2*HYPOTENUSE)
+    pen.left(135)
+    pen.forward(400)
+    pen.left(135)
+    pen.forward(4*HYPOTENUSE)
+    pen.right(135)
+    pen.forward(400)
+    pen.right(135)
+    pen.forward(2*HYPOTENUSE)
+    if cardinality == 0:
+        pen.right(45)
+    else:
+        pen.left(45)
+    pen.end_fill()
     pen.up()
 
 """
@@ -123,7 +159,7 @@ def XRemove(safe, coordinate):
 """
 The first puzzle set that always has one plus each on the top and bottom row with the plus on the bottom row always being two columns over from the plus on the top row.
 """
-def polyominoid_one():
+def polyominoid_one(safe = 0):
     firstPlus = (0, randint(0, 3))
     secondPlus = (3, firstPlus[1] + 2 if firstPlus[1] <= 1 else firstPlus[1] - 2)
     drawPlus(firstPlus)
@@ -140,7 +176,8 @@ def polyominoid_one():
     for row in ominoid:
         print("\t".join(row))
     """
-    safe = list(range(1,17))
+    if safe == 0:
+        safe = list(range(1,17))
     plusRemove(safe, firstPlus)
     plusRemove(safe, secondPlus)
     return safe
@@ -184,6 +221,12 @@ def polyominoid_two():
     XRemove(safe, untetheredX)
     return safe
 
+"""
+The third puzzle set that has either of two orientations. In both orientations there are two Xs in opposite corners.
+In the first orientation there are two + one square horizontally and one square vertically from an unoccupied corner. Both form straight line tethers to the Xs.
+In the second orientation there is one + in the corner that is tethered to an X and another + that is adjacent to that X (in the square that isn't in the path of the tether)
+that is tethered to the remaining X. 
+"""
 def polyominoid_three():
     firstX = (0, 3*randint(0,1))
     secondX = (3, 3-firstX[1])
@@ -255,10 +298,84 @@ def polyominoid_four():
     XRemove(safe, secondX)
     return safe
 
+"""
+The fifth puzzle set that will always have two + in opposite corners and an X in a corner that lies in the same diagonal as those two +. 
+This X is also tethered to one of the two + with either a north/south choros ixou or an east/west chorus ixou making an unsafe hourglass
+or an unsafe bowtie.
+"""
+def polyominoid_five():
+    safe = list(range(1,17))
+    chorosIxou(safe)
+    firstPlus = (0, 3*randint(0,1))
+    secondPlus = (3, 3-firstPlus[1])
+    diagonalMovement = randint(1, 2)
+    #places the X in the diagonal between the two plus in one of two random positions
+    onlyX = (firstPlus[0] + diagonalMovement, firstPlus[1] + diagonalMovement if firstPlus[1] == 0 else firstPlus[1] - diagonalMovement)
+    plusShape = [firstPlus, secondPlus]
+    randomPlus = plusShape[randint(0,1)]
+    untetheredPlus = plusShape[1 - plusShape.index(randomPlus)]
+    tether = [onlyX, randomPlus]
+    drawPlus(firstPlus)
+    drawPlus(secondPlus)
+    drawX(onlyX)
+    drawTether(tether)
+    tether[0], tether[1] = tether[1], tether[0]
+    plusRemove(safe, tether[1])
+    plusRemove(safe, untetheredPlus)
+    XRemove(safe, tether[0])
+    return safe
+
+"""
+The six puzzle set will always have two + in opposite corners and one X in one of the remaining corners. The final symbol will either be a + or X and will be
+one square horizontal or vertical of the remaining unfilled corner.
+"""
+def polyominoid_six():
+    firstPlus = (0, 3*randint(0, 1))
+    secondPlus = (3, 3-firstPlus[1])
+    plusShape = [firstPlus, secondPlus]
+    randomPlus = plusShape[randint(0,1)]
+    otherPlus = plusShape[1 - plusShape.index(randomPlus)]
+    firstX = (3-randomPlus[0], randomPlus[1])
+    finalShape = [3 - otherPlus[0], otherPlus[1]]
+    x_or_y = randint(0, 1)
+    if x_or_y == 0:
+        if finalShape[0] == 0:
+            finalShape[0] = 1
+        else:
+            finalShape[0] = 2
+    else:
+        if finalShape[1] == 0:
+            finalShape[1] = 1
+        else:
+            finalShape[1] = 2
+    drawPlus(firstPlus)
+    drawPlus(secondPlus)
+    drawX(firstX)
+    safe = list(range(1,17))
+    plusOrX = randint(0,1)
+    if plusOrX == 0:
+        drawPlus(finalShape)
+        plusRemove(safe, finalShape)
+    else:
+        drawX(finalShape)
+        XRemove(safe, finalShape)
+    plusRemove(safe, firstPlus)
+    plusRemove(safe, secondPlus)
+    XRemove(safe, firstX)
+    return safe
+
+"""
+The seventh puzzle set is exactly like the first set except with Chorus Ixou. 
+"""
+def polyominoid_seven():
+    safe = list(range(1,17))
+    chorosIxou(safe)
+    return polyominoid_one(safe)
+    
 def main():
     drawGrid()
-    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_three, polyominoid_four]
-    safe = polyominoid[1]()
+    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_three, polyominoid_four, polyominoid_five, polyominoid_six, polyominoid_seven]
+    safe = polyominoid[6]()
     guess = input("Determine the safe spots for this pattern: ").split()
     for index in range(0, len(guess)):
         guess[index] = int(guess[index])
