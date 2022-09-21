@@ -371,11 +371,40 @@ def polyominoid_seven():
     safe = list(range(1,17))
     chorosIxou(safe)
     return polyominoid_one(safe)
+
+"""
+This final puzzle has two + in the middle two squares of a single row and two Xs in the middle two squares of a row that is either two above or two below
+the row with two +.
+Finally there is a tether between a + in one column and an X in another column. 
+"""
+def cachexia():
+    rowPlus = randint(0, 3)
+    rowX = rowPlus + 2 if rowPlus <= 1 else rowPlus - 2
+    firstPlus = (rowPlus, 1)
+    secondPlus = (rowPlus, 2)
+    firstX = (rowX, 1)
+    secondX = (rowX, 2)
+    diagonalOrientation = randint(0, 1)
+    tether = [firstX, secondPlus] if diagonalOrientation == 0 else [secondX, firstPlus]
+    noneTether = [secondX, firstPlus] if diagonalOrientation == 0 else [firstX, secondPlus]
+    drawX(noneTether[0])
+    drawX(tether[0])
+    drawPlus(noneTether[1])
+    drawPlus(tether[1])
+    drawTether(tether)
+    tether[0], tether[1] = tether[1], tether[0]
+    safe = list(range(1,17))
+    XRemove(safe, noneTether[0])
+    XRemove(safe, tether[0])
+    plusRemove(safe, noneTether[1])
+    plusRemove(safe, tether[1])
+    return safe
+
     
 def main():
     drawGrid()
-    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_three, polyominoid_four, polyominoid_five, polyominoid_six, polyominoid_seven]
-    safe = polyominoid[6]()
+    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_three, polyominoid_four, polyominoid_five, polyominoid_six, polyominoid_seven, cachexia]
+    safe = polyominoid[7]()
     guess = input("Determine the safe spots for this pattern: ").split()
     for index in range(0, len(guess)):
         guess[index] = int(guess[index])
