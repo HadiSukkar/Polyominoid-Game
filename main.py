@@ -1,10 +1,12 @@
 from random import randint
 import turtle
+import time
 
 #set up a 4 by 4 matrix each containing numbers from 1 to 16 with the numbers going from left to right.
 grid = []
 for i in range(1, 17, 4):
     grid.append(list(range(i, i+4)))
+gridPen = turtle.Turtle()
 pen = turtle.Turtle()
 HYPOTENUSE = (2*100**2)**0.5
 
@@ -14,19 +16,19 @@ The exact center of the grid is (0,0) with each square being 100x100 in length.
 As a result the grid is first drawn with all the horizontal lines followed by all the vertical lines.
 """
 def drawGrid():
-    pen.up()
+    gridPen.up()
     for i in range(0, 5):
-        pen.goto(-200, -200+100*i)
-        pen.down()
-        pen.forward(400)
-        pen.up()
-    pen.left(90)
+        gridPen.goto(-200, -200+100*i)
+        gridPen.down()
+        gridPen.forward(400)
+        gridPen.up()
+    gridPen.left(90)
     for i in range(0, 5):
-        pen.goto(-200+100*i, -200)
-        pen.down()
-        pen.forward(400)
-        pen.up()
-    pen.right(90)
+        gridPen.goto(-200+100*i, -200)
+        gridPen.down()
+        gridPen.forward(400)
+        gridPen.up()
+    gridPen.right(90)
 
 """
 Method to draw the + signs.
@@ -35,6 +37,7 @@ The first number is the row number (and therefore corresponds to the Y-axis).
 The second number is the column number (and therefore corresponds to the X-axis).
 """
 def drawPlus(coordinate):
+    pen.up()
     pen.width(5)
     pen.color("red")
     #X starts at -200 and increments by 100 because the higher the column number, the more positive the value of X has to be.
@@ -57,6 +60,7 @@ It takes a parameter of the coordinates of the X.
 The first number is the row number and the second number is the column number.
 """
 def drawX(coordinate):
+    pen.up()
     pen.width(5)
     pen.color("red")
     #drawing down and to the right
@@ -93,6 +97,7 @@ Method to both draw and remove the safe squares from the chorus ixou pattern. Ch
 hourglass or bowtie be rendered unsafe.
 """
 def chorosIxou(safe):
+    pen.up()
     #A cardinality of 0 means that there's an hourglass shape choros ixou. A cardinality of 1 means a bowtie.
     cardinality = randint(0, 1)
     removed =[[2, 3, 14, 15], [5, 8, 9, 12]] 
@@ -402,20 +407,33 @@ def cachexia():
 
     
 def main():
+    keepPlaying = True
     drawGrid()
-    polyominoid = [polyominoid_one, polyominoid_two, polyominoid_three, polyominoid_four, polyominoid_five, polyominoid_six, polyominoid_seven, cachexia]
-    safe = polyominoid[7]()
-    guess = input("Determine the safe spots for this pattern: ").split()
-    for index in range(0, len(guess)):
-        guess[index] = int(guess[index])
-    if len(safe) != len(guess):
-        print("You guessed wrong!")
-        return
-    for item in safe:
-        if item not in guess:
-            print("You guessed wrong!")
-            return
-    print("You guessed correctly!")
+    while keepPlaying:
+        wrong = False
+        polyominoid = [polyominoid_one, polyominoid_two, polyominoid_three, polyominoid_four, polyominoid_five, polyominoid_six, polyominoid_seven, cachexia]
+        randomGame = randint(0, 7)
+        safe = polyominoid[randomGame]()
+        start = time.time()
+        guess = input("Determine the safe spots for this pattern: ").split()
+        for index in range(0, len(guess)):
+            guess[index] = int(guess[index])
+        if len(safe) != len(guess):
+            wrong = True
+        for item in safe:
+            if item not in guess:
+                wrong = True
+        if not wrong: 
+            print("You guessed correctly! It took you {0} seconds to figure out the safe spots".format(round(time.time()-start,2)))
+        else:
+            print("You guessed wrong!\nThe safe spots are: " + " ".join(map(str,safe)))
+        question = ""
+        while question != "Y" and question != "N":
+            if question != "":
+                print("Please enter the characters Y if you want to keep playing and N if you don't want to continue playing")
+            question = input("Do you want to keep playing Y/N\n")
+        if question == "N": keepPlaying = False
+        else: pen.clear()
 
 if __name__ == "__main__":
     main()
